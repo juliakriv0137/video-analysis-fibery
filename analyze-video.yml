@@ -1,0 +1,37 @@
+name: Analyze Video
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: 'URL of the video to analyze'
+        required: true
+      fibery_id:
+        description: 'Fibery entity ID'
+        required: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg tesseract-ocr
+          pip install -r requirements.txt
+
+      - name: Run video analysis
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          FIBERY_API_TOKEN: ${{ secrets.FIBERY_API_TOKEN }}
+          FIBERY_WORKSPACE: ${{ secrets.FIBERY_WORKSPACE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python main.py "${{ github.event.inputs.video_url }}" --fibery-id "${{ github.event.inputs.fibery_id }}"
