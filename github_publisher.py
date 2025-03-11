@@ -88,12 +88,13 @@ def publish_to_github(repo_name="video-analysis-fibery"):
             raise ValueError("GitHub token not found in environment variables")
 
         publisher = GitHubPublisher(token)
+        repo_info = None
 
-        # Create repository
+        # Try to create repository or continue if it exists
         try:
-            repo = publisher.create_repo(repo_name, 
+            repo_info = publisher.create_repo(repo_name, 
                 description="Video analysis system with Fibery integration for automated content processing")
-            logger.info(f"Created repository: {repo['html_url']}")
+            logger.info(f"Created repository: {repo_info['html_url']}")
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 422:  # Repository already exists
                 logger.info(f"Repository {repo_name} already exists, continuing with file uploads")
@@ -124,8 +125,9 @@ def publish_to_github(repo_name="video-analysis-fibery"):
 
         logger.info(f"Successfully uploaded {success_count} out of {len(files)} files")
 
-        if repo.get('html_url'):
-            return repo['html_url']
+        # Get repository URL either from creation response or construct it
+        if repo_info and repo_info.get('html_url'):
+            return repo_info['html_url']
         return f"https://github.com/{publisher.get_user()['login']}/{repo_name}"
 
     except Exception as e:
