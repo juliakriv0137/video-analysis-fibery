@@ -1,2 +1,83 @@
-# video-analysis-fibery
-Video analysis system with Fibery integration for automated content processing
+# Video Analysis System with Fibery Integration
+
+Система автоматического анализа видео с интеграцией Fibery для удобного управления и анализа контента.
+
+## Основные возможности
+
+- Автоматический анализ видео через Fibery
+- Извлечение текста и объектов из кадров
+- Анализ аудио и распознавание речи
+- Интеграция с GitHub Actions для автоматизации
+- Подробные отчеты о результатах анализа
+
+## Быстрый старт
+
+1. Клонируйте репозиторий
+2. Установите зависимости:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Настройте переменные окружения:
+   - OPENAI_API_KEY
+   - GITHUB_TOKEN
+   - FIBERY_API_TOKEN
+   - FIBERY_WORKSPACE
+
+4. Запустите сервер:
+   ```bash
+   python main.py
+   ```
+
+## Интеграция с Fibery
+
+Подробная инструкция по настройке интеграции с Fibery доступна в файле [FIBERY_SETUP.md](FIBERY_SETUP.md).
+
+## Требования
+
+- Python 3.11+
+- FFmpeg
+- Tesseract OCR
+- OpenAI API ключ
+- Fibery аккаунт
+
+## Установка
+1. Клонируйте репозиторий
+2. Установите зависимости:
+```bash
+pip install -r requirements.txt
+```
+3. Установите системные зависимости:
+   - FFmpeg: `sudo apt-get install ffmpeg`
+   - Tesseract: `sudo apt-get install tesseract-ocr`
+4. Создайте файл `.env` и добавьте ваш OpenAI API ключ:
+```
+OPENAI_API_KEY=your_api_key_here
+```
+
+## Использование
+```bash
+python main.py "URL_видео"
+```
+
+После завершения анализа будет создан архив `video_analysis.zip`, содержащий:
+- Все извлеченные кадры
+- Детальный анализ в JSON формате
+- README с описанием содержимого
+
+### Формат вывода
+Программа создает подробный анализ видео, включающий:
+- Метаданные видео (длительность, разрешение, формат)
+- Извлеченные кадры (1 кадр в секунду)
+- Анализ ключевых кадров с помощью GPT-4 Vision
+- Распознанный текст с кадров
+- Транскрипцию аудио
+- Детектирование музыкальных сегментов
+
+## Структура проекта
+- `main.py` - основной скрипт
+- `video_processor.py` - обработка видео и извлечение кадров
+- `ai_analyzer.py` - анализ с помощью OpenAI API
+
+## Лицензия
+
+MIT
