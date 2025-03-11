@@ -38,22 +38,37 @@ class GitHubPublisher:
     def upload_file(self, repo_name, file_path, commit_message="Add file via API"):
         """Upload a file to the repository"""
         try:
+            if not os.path.exists(file_path):
+                logger.warning(f"File not found: {file_path}")
+                return None
+
             with open(file_path, 'rb') as file:
                 content = file.read()
                 content_b64 = base64.b64encode(content).decode('utf-8')
 
+            # Try to get existing file
             url = f"{self.api_base}/repos/{self.get_user()['login']}/{repo_name}/contents/{Path(file_path).name}"
+            try:
+                existing_file = requests.get(url, headers=self.headers)
+                existing_file.raise_for_status()
+                sha = existing_file.json().get('sha')
+            except:
+                sha = None
+
             data = {
                 "message": commit_message,
                 "content": content_b64
             }
+            if sha:
+                data["sha"] = sha
 
             response = requests.put(url, headers=self.headers, json=data)
             response.raise_for_status()
+            logger.info(f"Successfully uploaded {file_path}")
             return response.json()
         except Exception as e:
             logger.error(f"Error uploading file {file_path}: {str(e)}")
-            raise
+            return None
 
     def get_user(self):
         """Get authenticated user information"""
@@ -75,9 +90,15 @@ def publish_to_github(repo_name="video-analysis-fibery"):
         publisher = GitHubPublisher(token)
 
         # Create repository
-        repo = publisher.create_repo(repo_name, 
-            description="Video analysis system with Fibery integration for automated content processing")
-        logger.info(f"Created repository: {repo['html_url']}")
+        try:
+            repo = publisher.create_repo(repo_name, 
+                description="Video analysis system with Fibery integration for automated content processing")
+            logger.info(f"Created repository: {repo['html_url']}")
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 422:  # Repository already exists
+                logger.info(f"Repository {repo_name} already exists, continuing with file uploads")
+            else:
+                raise
 
         # Files to upload
         files = [
@@ -95,12 +116,17 @@ def publish_to_github(repo_name="video-analysis-fibery"):
         ]
 
         # Upload each file
+        success_count = 0
         for file in files:
-            if os.path.exists(file):
-                publisher.upload_file(repo_name, file)
+            if publisher.upload_file(repo_name, file):
+                success_count += 1
                 logger.info(f"Uploaded {file}")
 
-        return repo['html_url']
+        logger.info(f"Successfully uploaded {success_count} out of {len(files)} files")
+
+        if repo.get('html_url'):
+            return repo['html_url']
+        return f"https://github.com/{publisher.get_user()['login']}/{repo_name}"
 
     except Exception as e:
         logger.error(f"Error publishing to GitHub: {str(e)}")
